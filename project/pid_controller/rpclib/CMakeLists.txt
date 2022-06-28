@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.9.0)
-project(rpc VERSION 2.2.1)
+cmake_minimum_required(VERSION 3.5.1)
+project(rpc VERSION 2.3.0)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
@@ -121,12 +121,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   list(APPEND RPCLIB_BUILD_FLAGS
     -Wall -pedantic -Weverything -Wno-c++98-compat
     -Wno-c++98-compat-pedantic -Wno-padded -Wno-missing-prototypes
-    -Wno-undef -pthread)
+    -Wno-undef)
 
     set(UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED)
     check_warning_flag("unused-lambda-capture" UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED)
     if(${UNUSED_LAMBDA_CAPTURE_WARN_SUPPORTED})
-      list(APPEND RPCLIB_BUILD_FLAGS -Wno-no-unused-lambda-capture)
+      list(APPEND RPCLIB_BUILD_FLAGS -Wno-unused-lambda-capture)
     endif()
 
     check_warning_flag("zero-as-null-pointer-constant" ZERO_AS_NULL_POINTER_CONSTANT_WARN_SUPPORTED)
@@ -167,6 +167,9 @@ if(RPCLIB_COMPILE_DEFINITIONS)
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${RPCLIB_DEP_LIBRARIES})
+if (WIN32)
+  target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
+endif()
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -197,6 +200,7 @@ endif()
 # Example programs
 #
 if(RPCLIB_BUILD_EXAMPLES)
+  find_package(Threads)
   set(RPCLIB_ROOT_DIR "${PROJECT_SOURCE_DIR}")
   set(RPCLIB_PROJECT_NAME "${CMAKE_PROJECT_NAME}")
   set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/localbuild")

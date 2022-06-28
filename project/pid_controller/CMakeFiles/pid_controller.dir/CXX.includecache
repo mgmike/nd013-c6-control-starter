@@ -6,7 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.cpp
+behavior_planner_FSM.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.h
 chrono
 -
 cmath
@@ -22,13 +26,17 @@ glog/logging.h
 gtest/gtest.h
 -
 planning_params.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/planning_params.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/planning_params.h
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 utils.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/cost_functions.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cost_functions.cpp
+cost_functions.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cost_functions.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cost_functions.h
 math.h
 -
 algorithm
@@ -48,23 +56,57 @@ carla/client/Client.h
 glog/logging.h
 -
 planning_params.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/planning_params.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/planning_params.h
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 utils.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/cubic_spiral.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cubic_spiral.cpp
+cubic_spiral.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cubic_spiral.h
+algorithm
+-
+glog/logging.h
+-
+Eigen/Core
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/Eigen/Core
+Eigen/LU
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/Eigen/LU
+integral.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/integral.h
+spiral_equations.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_equations.h
+structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cubic_spiral.h
 vector
 -
 glog/logging.h
 -
 spiral_base.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/spiral_base.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_base.h
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/json.hpp
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/integral.cpp
+integral.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/integral.h
+array
+-
+glog/logging.h
+-
+gtest/gtest.h
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/integral.h
+functional
+-
+vector
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/json.hpp
 algorithm
 -
 array
@@ -120,7 +162,7 @@ utility
 vector
 -
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/main.cpp
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/main.cpp
 string
 -
 array
@@ -154,7 +196,7 @@ fstream
 typeinfo
 -
 json.hpp
-/home/workspace/nd013-c6-control-starter/project/pid_controller/json.hpp
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/json.hpp
 carla/client/ActorBlueprint.h
 -
 carla/client/BlueprintLibrary.h
@@ -178,17 +220,19 @@ carla/image/ImageView.h
 carla/sensor/data/Image.h
 -
 Eigen/QR
-/home/workspace/nd013-c6-control-starter/project/pid_controller/Eigen/QR
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/Eigen/QR
 behavior_planner_FSM.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/behavior_planner_FSM.h
 motion_planner.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/motion_planner.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/motion_planner.h
 planning_params.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/planning_params.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/planning_params.h
 utils.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 pid_controller.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/pid_controller.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/pid_controller.h
+limits
+-
 iostream
 -
 fstream
@@ -201,8 +245,14 @@ vector
 -
 cmath
 -
+time.h
+-
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/motion_planner.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/motion_planner.cpp
+motion_planner.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/motion_planner.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/motion_planner.h
 math.h
 -
 cfloat
@@ -216,25 +266,43 @@ carla/client/Client.h
 glog/logging.h
 -
 cost_functions.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/cost_functions.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cost_functions.h
 cubic_spiral.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/cubic_spiral.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/cubic_spiral.h
 planning_params.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/planning_params.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/planning_params.h
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 utils.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 velocity_profile_generator.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/pid_controller.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/pid_controller.cpp
+pid_controller.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/pid_controller.h
+vector
+-
+iostream
+-
+math.h
+-
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/planning_params.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/pid_controller.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/planning_params.h
 array
 -
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/spiral_base.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_base.cpp
+spiral_base.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_base.h
+cmath
+-
+limits
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_base.h
 algorithm
 -
 cmath
@@ -242,17 +310,31 @@ cmath
 vector
 -
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_equations.cpp
+spiral_equations.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_equations.h
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/spiral_equations.h
+array
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 vector
 -
 carla/geom/Location.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/carla/geom/Location.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/carla/geom/Location.h
 carla/geom/Rotation.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/carla/geom/Rotation.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/carla/geom/Rotation.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.cpp
+utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
+cmath
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 random
 -
 vector
@@ -260,9 +342,21 @@ vector
 carla/client/Client.h
 -
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 
-/home/workspace/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.cpp
+velocity_profile_generator.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.h
+cfloat
+-
+cmath
+-
+cstdlib
+-
+thread
+-
+
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/velocity_profile_generator.h
 vector
 -
 carla/client/Client.h
@@ -270,9 +364,9 @@ carla/client/Client.h
 glog/logging.h
 -
 structs.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/structs.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/structs.h
 utils.h
-/home/workspace/nd013-c6-control-starter/project/pid_controller/utils.h
+/media/mike/Storage/Documents/udacity_av/Control/nd013-c6-control-starter/project/pid_controller/utils.h
 
 eigen-3.3.7/Eigen/Cholesky
 Core
@@ -666,6 +760,34 @@ eigen-3.3.7/Eigen/src/Jacobi/Jacobi.h
 src/Core/util/ReenableStupidWarnings.h
 eigen-3.3.7/Eigen/src/Core/util/ReenableStupidWarnings.h
 
+eigen-3.3.7/Eigen/LU
+Core
+eigen-3.3.7/Eigen/Core
+src/Core/util/DisableStupidWarnings.h
+eigen-3.3.7/Eigen/src/Core/util/DisableStupidWarnings.h
+src/misc/Kernel.h
+eigen-3.3.7/Eigen/src/misc/Kernel.h
+src/misc/Image.h
+eigen-3.3.7/Eigen/src/misc/Image.h
+src/LU/FullPivLU.h
+eigen-3.3.7/Eigen/src/LU/FullPivLU.h
+src/LU/PartialPivLU.h
+eigen-3.3.7/Eigen/src/LU/PartialPivLU.h
+mkl_lapacke.h
+eigen-3.3.7/Eigen/mkl_lapacke.h
+src/misc/lapacke.h
+eigen-3.3.7/Eigen/src/misc/lapacke.h
+src/LU/PartialPivLU_LAPACKE.h
+eigen-3.3.7/Eigen/src/LU/PartialPivLU_LAPACKE.h
+src/LU/Determinant.h
+eigen-3.3.7/Eigen/src/LU/Determinant.h
+src/LU/InverseImpl.h
+eigen-3.3.7/Eigen/src/LU/InverseImpl.h
+src/LU/arch/Inverse_SSE.h
+eigen-3.3.7/Eigen/src/LU/arch/Inverse_SSE.h
+src/Core/util/ReenableStupidWarnings.h
+eigen-3.3.7/Eigen/src/Core/util/ReenableStupidWarnings.h
+
 eigen-3.3.7/Eigen/QR
 Core
 eigen-3.3.7/Eigen/Core
@@ -1010,6 +1132,18 @@ eigen-3.3.7/Eigen/src/Householder/HouseholderSequence.h
 
 eigen-3.3.7/Eigen/src/Jacobi/Jacobi.h
 
+eigen-3.3.7/Eigen/src/LU/Determinant.h
+
+eigen-3.3.7/Eigen/src/LU/FullPivLU.h
+
+eigen-3.3.7/Eigen/src/LU/InverseImpl.h
+
+eigen-3.3.7/Eigen/src/LU/PartialPivLU.h
+
+eigen-3.3.7/Eigen/src/LU/PartialPivLU_LAPACKE.h
+
+eigen-3.3.7/Eigen/src/LU/arch/Inverse_SSE.h
+
 eigen-3.3.7/Eigen/src/QR/ColPivHouseholderQR.h
 
 eigen-3.3.7/Eigen/src/QR/ColPivHouseholderQR_LAPACKE.h
@@ -1021,6 +1155,10 @@ eigen-3.3.7/Eigen/src/QR/FullPivHouseholderQR.h
 eigen-3.3.7/Eigen/src/QR/HouseholderQR.h
 
 eigen-3.3.7/Eigen/src/QR/HouseholderQR_LAPACKE.h
+
+eigen-3.3.7/Eigen/src/misc/Image.h
+
+eigen-3.3.7/Eigen/src/misc/Kernel.h
 
 eigen-3.3.7/Eigen/src/misc/blas.h
 
