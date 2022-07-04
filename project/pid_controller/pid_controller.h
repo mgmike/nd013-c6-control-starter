@@ -11,7 +11,7 @@ class PID {
 public:
 
    /**
-   * TODO: Create the PID class
+   * Create the PID class
    **/
 
     /*
@@ -19,7 +19,7 @@ public:
     */
 
    double cte_p = 0.0;
-   double cte_prev = -1.0;
+   double cte_prev = 0.0;
    double cte_d = 0.0;
    double cte_i = 0.0;
    double error = 0.0;
@@ -31,6 +31,10 @@ public:
    double Kp;
    double Ki;
    double Kd;
+
+   double Dp = 1.0;
+   double Di = 1.0;
+   double Dd = 1.0;
 
     /*
     * Output limits

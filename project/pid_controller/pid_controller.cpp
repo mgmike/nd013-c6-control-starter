@@ -27,17 +27,17 @@ void PID::Init(double Kpi, double Kii, double Kdi, double output_lim_maxi, doubl
 
 }
 
-
 void PID::UpdateError(double cte) {
    /**
    * Update PID errors based on cte.
    **/
-  if (cte_prev == -1.0) cte_prev = cte;
+
+  if (abs(delta_time) <= 0.00001) return;
   cte_p = cte;
-  cte_d = cte - cte_prev;
-  cte_i += cte;
+  cte_d = (cte - cte_prev) / delta_time;
+  cte_i += cte * delta_time;
   cte_prev = cte;
-  error += pow(cte, 2.0);
+  error = - Kp * cte_p - Kd * cte_d - Ki * cte_i;
 }
 
 double PID::TotalError() {
@@ -48,8 +48,9 @@ double PID::TotalError() {
    double control;
 
    control = error;
+   cout << "Error: " << error << endl;
    if (control < output_lim_min) control = output_lim_min;
-   if (control > output_lim_max) control = output_lim_max;
+   else if (control > output_lim_max) control = output_lim_max;
    return control;
 }
 
