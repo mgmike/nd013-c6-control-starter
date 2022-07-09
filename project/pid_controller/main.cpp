@@ -203,8 +203,11 @@ double twiddle(vector<double> &p, vector<double> &dp, double tol = 0.2){
 
 }
 
-int main ()
+int main (int argc, char* argv[])
 {
+  double steer_weights[] = {0.2, 0.01, 0.05};
+  double throttle_weights[] = {1.5, 0.8, 0.001};
+
   cout << "starting server" << endl;
   uWS::Hub h;
 
@@ -236,8 +239,19 @@ int main ()
   PID pid_steer = PID();
   PID pid_throttle = PID();
 
-  pid_steer.Init(0.2, 0.01, 0.05, 1.2, -1.2);
-  pid_throttle.Init(1.0, 0.01, 0.0, 1.0, -1.0);
+  if(argc > 1){
+    cout << "Weights are: ";
+    for (int i = 0; i < 3; i++){
+      steer_weights[i] = std::stod(argv[i + 1]);
+      throttle_weights[i] = std::stod(argv[i + 4]);
+      cout << " " << steer_weights[i];
+      cout << " " << throttle_weights[i];
+    }
+    cout << endl;
+  }
+
+  pid_steer.Init(steer_weights[0], steer_weights[1], steer_weights[2], 1.2, -1.2);
+  pid_throttle.Init(throttle_weights[0], throttle_weights[1], throttle_weights[2], 1.0, -1.0);
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode){
     auto s = hasData(data);
@@ -313,57 +327,43 @@ int main ()
       double dx = 0.0;
       double dy = 0.0;
       double yaw_exp = 0.0;
-      
-      // if (x_points.size() > 2) {
-      //   dx = x_points[x_points.size() -1] - x_points[x_points.size() - 2];
-      //   dy = y_points[y_points.size() -1] - y_points[y_points.size() - 2];
-      //   if (dy < 0.0000001 && dy > -0.0000001){
-      //     if (dx > 0){
-      //       yaw_exp = M_PI_2;
-      //     } else {
-      //       yaw_exp = -M_PI_2;
-      //     }
-      //   } else {
-      //     yaw_exp = atan(dx / dy);
-      //   }
-      // }
 
       // cout << "Current location, x: " << x_position << " y: " << y_position << endl;
 
-      // double closest_distance = numeric_limits<int>::max();
-      // int index_closest_pt = -1;
+      double closest_distance = numeric_limits<int>::max();
+      int index_closest_pt = -1;
 
-      // for (int i = 0; i < x_points.size(); i++) {
-      //   //cout << "\tWaypoint x: " << x_points[i] << " y: " << y_points[i] << endl;
-      //   double temp_distance = distance_between_points(x_position, y_position, x_points[i], y_points[i]);
-      //   if (temp_distance < closest_distance){
-      //     closest_distance = temp_distance;
-      //     index_closest_pt = i;
-      //   }
-      // }
+      for (int i = 0; i < x_points.size(); i++) {
+        //cout << "\tWaypoint x: " << x_points[i] << " y: " << y_points[i] << endl;
+        double temp_distance = distance_between_points(x_position, y_position, x_points[i], y_points[i]);
+        if (temp_distance < closest_distance){
+          closest_distance = temp_distance;
+          index_closest_pt = i;
+        }
+      }
 
-      // yaw_exp = angle_between_points(x_position, y_position, x_points[index_closest_pt + 1], y_points[index_closest_pt + 1]);
+      yaw_exp = angle_between_points(x_position, y_position, x_points[index_closest_pt + 1], y_points[index_closest_pt + 1]);
 
-      // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
-      // error_steer = yaw_exp - yaw;
+      cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
+      error_steer = yaw_exp - yaw;
 
-      // /**
-      // * (step 3): uncomment these lines
-      // **/
-      // // Compute control to apply
-      // pid_steer.UpdateError(error_steer);
-      // steer_output = pid_steer.TotalError();
+      /**
+      * (step 3): uncomment these lines
+      **/
+      // Compute control to apply
+      pid_steer.UpdateError(error_steer);
+      steer_output = - pid_steer.TotalError();
 
       // cout << "Steer output: " << steer_output << endl;
 
-      // // Save data
-      // file_steer.seekg(std::ios::beg);
-      // for(int j=0; j < i - 1; ++j) {
-      //     file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      // }
-      // file_steer  << i ;
-      // file_steer  << " " << error_steer;
-      // file_steer  << " " << steer_output << endl;
+      // Save data
+      file_steer.seekg(std::ios::beg);
+      for(int j=0; j < i - 1; ++j) {
+          file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+      file_steer  << i ;
+      file_steer  << " " << error_steer;
+      file_steer  << " " << steer_output << endl;
 
       ////////////////////////////////////////
       // Throttle control
