@@ -309,9 +309,6 @@ int main (int argc, char* argv[])
       // Steering control
       ////////////////////////////////////////
 
-      /**
-      * (step 3): uncomment these lines
-      **/
       // Update the delta time with the previous command
       pid_steer.UpdateDeltaTime(new_delta_time);
 
@@ -320,9 +317,10 @@ int main (int argc, char* argv[])
       double steer_output;
 
       /**
-      * (step 3): compute the steer error (error_steer) from the position and the desired trajectory
       * To get the current sterring angle, I computed the slope of the path by using the last and second to last point of the list. 
       * I then used tangent to calculate the angle in relation to the x axis.
+      * PS. I found the angle_between_points function right after I finished coding that... 
+      * so that was kind of a waste lol. At least it works better!
       **/
       double dx = 0.0;
       double dy = 0.0;
@@ -333,23 +331,22 @@ int main (int argc, char* argv[])
       double closest_distance = numeric_limits<int>::max();
       int index_closest_pt = -1;
 
-      for (int i = 0; i < x_points.size(); i++) {
-        //cout << "\tWaypoint x: " << x_points[i] << " y: " << y_points[i] << endl;
-        double temp_distance = distance_between_points(x_position, y_position, x_points[i], y_points[i]);
-        if (temp_distance < closest_distance){
-          closest_distance = temp_distance;
-          index_closest_pt = i;
-        }
-      }
+      // Code to find the closest waypoint to the vehicle.
 
-      yaw_exp = angle_between_points(x_position, y_position, x_points[index_closest_pt + 1], y_points[index_closest_pt + 1]);
+      // for (int i = 0; i < x_points.size(); i++) {
+      //   cout << "\tWaypoint x: " << x_points[i] << " y: " << y_points[i] << endl;
+      //   double temp_distance = distance_between_points(x_position, y_position, x_points[i], y_points[i]);
+      //   if (temp_distance < closest_distance){
+      //     closest_distance = temp_distance;
+      //     index_closest_pt = i;
+      //   }
+      // }
+
+      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
       cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
       error_steer = yaw_exp - yaw;
 
-      /**
-      * (step 3): uncomment these lines
-      **/
       // Compute control to apply
       pid_steer.UpdateError(error_steer);
       steer_output = - pid_steer.TotalError();
@@ -369,26 +366,18 @@ int main (int argc, char* argv[])
       // Throttle control
       ////////////////////////////////////////
 
-      /**
-      * (step 2): uncomment these lines
-      **/
       // Update the delta time with the previous command
       pid_throttle.UpdateDeltaTime(new_delta_time);
 
       // Compute error of speed
       double error_throttle;
-      /**
-      * (step 2): compute the throttle error (error_throttle) from the position and the desired speed
-      **/
+
       // modify the following line for step 2
       error_throttle = velocity - v_points[v_points.size() - 1];
 
       double throttle_output;
       double brake_output;
 
-      /**
-      * (step 2): uncomment these lines
-      **/
       // Compute control to apply
       pid_throttle.UpdateError(error_throttle);
       double throttle = pid_throttle.TotalError();
