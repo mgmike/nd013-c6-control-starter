@@ -33,6 +33,7 @@ import glob
 import os
 import sys
 import math
+import time
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -796,6 +797,9 @@ def game_loop(args):
     try:
         client = carla.Client(args.host, args.port)
         client.set_timeout(2.0)
+        client.load_world('Town03')
+
+        time.sleep(1)
 
         display = pygame.display.set_mode(
             (args.width, args.height),
@@ -829,6 +833,15 @@ def game_loop(args):
         while True:
             yield from asyncio.sleep(0.01) # check if any data from the websocket
 
+            sim_time = world.hud.simulation_time - start_time
+
+            if sim_time >= 10.000:
+                print("Restarting")
+                start_time = world.hud.simulation_time
+                world.restart()
+                ws.send(json.dumps({'restart': True}))
+                continue
+
             if controller.parse_events(client, world):
                 return
 
@@ -836,9 +849,6 @@ def game_loop(args):
                 player = world.player.get_transform()
                 way_points.append(player)
                 v_points.append(0)
-
-
-            sim_time = world.hud.simulation_time - start_time
 
             if update_cycle and (len(way_points) < _update_point_thresh):
 
@@ -858,7 +868,7 @@ def game_loop(args):
                 location_y = t.location.y
                 location_z = t.location.z
 
-                ws.send(json.dumps({'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
+                ws.send(json.dumps({'restart': False, 'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
 
             clock.tick_busy_loop(60)
             world.tick(clock)

@@ -2,8 +2,6 @@
 
 # Proportional-Integral-Derivative (PID)
 
-In this project, you will apply the skills you have acquired in this course to design a PID controller to perform vehicle trajectory tracking. Given a trajectory as an array of locations, and a simulation environment, you will design and code a PID controller and test its efficiency on the CARLA simulator used in the industry.
-
 ### Installation
 
 Run the following commands to install the starter code in the Udacity Workspace:
@@ -20,6 +18,10 @@ Open new window
 // Will say permission denied, ignore and continue
 * `cd /opt/carla-simulator/`
 * `SDL_VIDEODRIVER=offscreen ./CarlaUE4.sh -opengl`
+
+I am using different version of cuda than the workspace environment, so SDL_VIDEODRIVER=offscreen does not work. In addition, opengl is no longer supported for my version of Unreal Engine so Vulkan is used. So for my environment I omit those options:
+
+* `./CarlaUE4.sh`
 
 ## Compile and Run the Controller
 
@@ -48,44 +50,26 @@ If error bind is already in use, or address already being used
 * `ps -aux | grep carla`
 * `kill id`
 
+For my local enviornment, I can simply ctrl + c to exit.
 
-## Project Instructions
+## Project 
 
-In the previous project you built a path planner for the autonomous vehicle. Now you will build the steer and throttle controller so that the car follows the trajectory.
 
-You will design and run the a PID controller as described in the previous course.
-
-In the directory [/pid_controller](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller)  you will find the files [pid.cpp](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/pid.cpp)  and [pid.h](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/pid.h). This is where you will code your pid controller.
-The function pid is called in [main.cpp](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/main.cpp).
 
 ### Step 1: Build the PID controller object
-Complete the TODO in the [pid_controller.h](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/pid_controller.h) and [pid_controller.cpp](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/pid_controller.cpp).
+For step 1, the files to be changed are [pid_controller.h](https://github.com/mgmike/nd013-c6-control-starter/tree/master/project/pid_controller/pid_controller.h) and [pid_controller.cpp](https://github.com/mgmike/nd013-c6-control-starter/tree/master/project/pid_controller/pid_controller.cpp).
 
-Run the simulator and see in the desktop mode the car in the CARLA simulator. Take a screenshot and add it to your report. The car should not move in the simulation.
-### Step 2: PID controller for throttle:
-1) In [main.cpp](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/main.cpp), complete the TODO (step 2) to compute the error for the throttle pid. The error is the speed difference between the actual speed and the desired speed.
+First the PID controller object was completed. The UpdateError function updates the PID errors and the total error. The TotalError function returns the total error in the provided interval. To test if the program compiles, the simulater and code was ran locally. It can be seen below that Carla runs fine and the code executes without errors but the map is different than in the provided project workspace. I am using a newer version of Carla locally so the default map is different. 
 
-Useful variables:
-- The last point of **v_points** vector contains the velocity computed by the path planner.
-- **velocity** contains the actual velocity.
-- The output of the controller should be inside [-1, 1].
+![Carla runs](project/media/step1.png)
+Carla runs
 
-2) Comment your code to explain why did you computed the error this way.
+### Steps 2 and 3: PID controller for throttle and steer:
+The [main.cpp](https://github.com/mgmike/nd013-c6-control-starter/tree/master/project/pid_controller/main.cpp), file was edited to complete steps 2 and 3.
 
-3) Tune the parameters of the pid until you get satisfying results (a perfect trajectory is not expected).
+To calculate the throttle error, the difference between the current velocty and the velocity the vehicle should be traveling at calculated by the planner is found.
 
-### Step 3: PID controller for steer:
-1) In [main.cpp](https://github.com/udacity/nd013-c6-control-starter/tree/mathilde/project_c6/project/pid_controller/main.cpp), complete the TODO (step 3) to compute the error for the steer pid. The error is the angle difference between the actual steer and the desired steer to reach the planned position.
-
-Useful variables:
-- The variable **y_points** and **x_point** gives the desired trajectory planned by the path_planner.
-- **yaw** gives the actual rotational angle of the car.
-- The output of the controller should be inside [-1.2, 1.2].
-- If needed, the position of the car is stored in the variables **x_position**, **y_position** and **z_position**
-
-2) Comment your code to explain why did you computed the error this way.
-
-3) Tune the parameters of the pid until you get satisfying results (a perfect trajectory is not expected).
+Calculating the error for steering is more involved than velocity because although the actual yaw is given, the expected yaw must be calculated. The expected yaw will be the angle between the vehicle's current position and the closest waypoint. The provided function angle_between_points is used.
 
 ### Step 4: Evaluate the PID efficiency
 The values of the error and the pid command are saved in thottle_data.txt and steer_data.txt.
@@ -102,12 +86,30 @@ pip3 install pandas
 pip3 install matplotlib
 ```
 
-Answer the following questions:
-- Add the plots to your report and explain them (describe what you see)
-- What is the effect of the PID according to the plots, how each part of the PID affects the control command?
-- How would you design a way to automatically tune the PID parameters?
-- PID controller is a model free controller, i.e. it does not use a model of the car. Could you explain the pros and cons of this type of controller?
-- (Optional) What would you do to improve the PID controller?
+I edited c++ code to accept input parameters so I could change the PID weights without re-compiling. 
+To tune the parameters, I started with just proportional for speed. My progresssion of weights is as follows, 5.0, 1.0, 0.5, 0.1 and I start with proportional weight, then add differential weight and follow with integral weight. This requires a lot of manual changes though, and the resulting plots are inconsistant when running on my local machine. I believe this is due to the change in map as the path waypoints greatly increase in distance as the vehicle gets more lost. 
+
+![Manual PD adjustment on local machine](project/media/parameter_tuning.png)
+
+Eventually I figured it would be best to try on the workspace enviornment, but I did not want to re-do all the weight changes again. I took a look at the questions posted by other students to get closer to ideal. My results are below. 
+
+![Workspace PID adjustment on workspace enviornment](project/media/workspace_results.png)
+
+Each part of PID is important. Proportional weight is typically the most influential as is the adjustment proportional to the cross track error. Just using P will cause oscillations so the derivative control uses slope of the error to smooth the curve and approach the expected value. The integral controller will reduce any bias in the long run by using the total error.
+
+To automatically tune the parameters, I would implement a twiddle optimization algorithm. To do this, a few things must be done:
+- First create a loop to generate the ego vehicle then remove it after a few seconds. 
+- Change the map
+- Edit the python code to send a flag indicating a vehicle reset
+- Receive the flag in the C++ code
+- Use the total error for steering and throttle to update parameters using twiddle
+- Reset PID errors
+
+The pros of a model free controller are:
+- It is less resource intensive
+- Faster and easier to train
+The cons are:
+- Only tuned for the simulator vehicle and must be tuned again for each vehicle (Non generic)
 
 
 ### Tips:
