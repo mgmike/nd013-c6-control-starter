@@ -6,6 +6,7 @@
 
 #ifndef PID_CONTROLLER_H
 #define PID_CONTROLLER_H
+#include <vector>
 
 class PID {
 public:
@@ -23,18 +24,15 @@ public:
    double cte_d = 0.0;
    double cte_i = 0.0;
    double error = 0.0;
+   double best_err = 0.0;
+   double total_err = 0.0;
 
     /*
     * Coefficients
     */
 
-   double Kp;
-   double Ki;
-   double Kd;
-
-   double Dp = 1.0;
-   double Di = 1.0;
-   double Dd = 1.0;
+   std::vector<double> K;
+   std::vector<double> D;
 
     /*
     * Output limits
@@ -42,6 +40,9 @@ public:
 
    double output_lim_max;
    double output_lim_min;
+
+
+   bool going_up = false;
   
     /*
     * Delta time
@@ -62,7 +63,8 @@ public:
     /*
     * Initialize PID.
     */
-    void Init(double Kp, double Ki, double Kd, double output_lim_max, double output_lim_min);
+    void Init(std::vector<double> K, double output_lim_max, double output_lim_min);
+    void Init(std::vector<double> K, std::vector<double> D, double output_lim_max, double output_lim_min);
 
     /*
     * Update the PID error variables given cross track error.

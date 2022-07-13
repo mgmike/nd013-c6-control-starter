@@ -199,14 +199,37 @@ void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& o
 	obst_flag = true;
 }
 
-double twiddle(vector<double> &p, vector<double> &dp, double tol = 0.2){
+double twiddle(vector<double> &p, vector<double> &dp, bool &going_up, double &best_err, double &total_err, int &n, double tol = 0.2){
+  double err = total_err / n;
+  int i = n % 3;
+  if (dp[0] + dp[1] + dp[2] > tol){
+    if (!going_up){
+      going_up = true;
+      p[i] += dp[i];
+    } else {
+      going_up = false;
+      p[i] -= 2* dp[i];
+    }
+    
+    if (err < best_err){
+      best_err = err;
+      dp[i] *= 1.1;
+    } else {
+      if (!going_up){
+        p[i] += dp[i];
+        dp[i] *= 0.9;
+      }
+    }
+  }
 
+  // Reset errors and count
+  total_err = 0.0;
+  n = 0;
+  return best_err;
 }
 
-int main (int argc, char* argv[])
+int main ()
 {
-  double steer_weights[] = {0.2, 0.01, 0.05};
-  double throttle_weights[] = {1.5, 0.8, 0.001};
 
   cout << "starting server" << endl;
   uWS::Hub h;
@@ -239,19 +262,8 @@ int main (int argc, char* argv[])
   PID pid_steer = PID();
   PID pid_throttle = PID();
 
-  if(argc > 1){
-    cout << "Weights are: ";
-    for (int i = 0; i < 3; i++){
-      steer_weights[i] = std::stod(argv[i + 1]);
-      throttle_weights[i] = std::stod(argv[i + 4]);
-      cout << " " << steer_weights[i];
-      cout << " " << throttle_weights[i];
-    }
-    cout << endl;
-  }
-
-  pid_steer.Init(steer_weights[0], steer_weights[1], steer_weights[2], 1.2, -1.2);
-  pid_throttle.Init(throttle_weights[0], throttle_weights[1], throttle_weights[2], 1.0, -1.0);
+  pid_steer.Init({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
+  pid_throttle.Init({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode){
     auto s = hasData(data);
@@ -259,6 +271,13 @@ int main (int argc, char* argv[])
     if (s != "") {
 
       auto data = json::parse(s);
+
+      if (data["restart"]){
+        cout << "RESTARTING" << endl;
+        twiddle(pid_steer.K, pid_steer.D, pid_steer.going_up, pid_steer.best_err, pid_steer.total_err, i);
+        twiddle(pid_throttle.K, pid_throttle.D, pid_throttle.going_up, pid_throttle.best_err, pid_throttle.total_err, i);
+        return;
+      }
 
       // create file to save values
       fstream file_steer;
@@ -381,6 +400,7 @@ int main (int argc, char* argv[])
       // Compute control to apply
       pid_throttle.UpdateError(error_throttle);
       double throttle = pid_throttle.TotalError();
+
 
       // Adapt the negative throttle to break
       if (throttle > 0.0) {
