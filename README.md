@@ -99,6 +99,7 @@ Each part of PID is important. Proportional weight is typically the most influen
 
 To automatically tune the parameters, I would implement a twiddle optimization algorithm. To do this, a few things must be done:
 - First create a loop to generate the ego vehicle then remove it after a few seconds. 
+    - To do this, I had to learn about spawning actors
 - Change the map
 - Edit the python code to send a flag indicating a vehicle reset
 - Receive the flag in the C++ code

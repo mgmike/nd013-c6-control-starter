@@ -175,7 +175,7 @@ void path_planner(vector<double>& x_points, vector<double>& y_points, vector<dou
   int index = 0;
   int max_points = 20;
   int add_points = spirals_x[best_spiral_idx].size();
-  while( x_points.size() < max_points && index < add_points ){
+  while( best_spiral_idx >= 0 && x_points.size() < max_points && index < add_points ){
     double point_x = spirals_x[best_spiral_idx][index];
     double point_y = spirals_y[best_spiral_idx][index];
     double velocity = spirals_v[best_spiral_idx][index];
@@ -199,33 +199,33 @@ void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& o
 	obst_flag = true;
 }
 
-double twiddle(vector<double> &p, vector<double> &dp, bool &going_up, double &best_err, double &total_err, int &n, double tol = 0.2){
-  double err = total_err / n;
+double twiddle(PID pid, int n, double tol = 0.2){
+  double err = pow(pid.total_err, 2) / n;
   int i = n % 3;
-  if (dp[0] + dp[1] + dp[2] > tol){
-    if (!going_up){
-      going_up = true;
-      p[i] += dp[i];
+  if (pid.D[0] + pid.D[1] + pid.D[2] > tol){
+    if (!pid.going_up[i]){
+      pid.going_up[i] = true;
+      pid.K[i] += pid.D[i];
     } else {
-      going_up = false;
-      p[i] -= 2* dp[i];
+      pid.going_up[i] = false;
+      pid.K[i] -= 2* pid.D[i];
     }
     
-    if (err < best_err){
-      best_err = err;
-      dp[i] *= 1.1;
+    if (err < pid.best_err){
+      pid.best_err = err;
+      pid.D[i] *= 1.1;
     } else {
-      if (!going_up){
-        p[i] += dp[i];
-        dp[i] *= 0.9;
+      if (!pid.going_up[i]){
+        pid.K[i] += pid.D[i];
+        pid.D[i] *= 0.9;
       }
     }
   }
 
   // Reset errors and count
-  total_err = 0.0;
+  pid.total_err = 0.0;
   n = 0;
-  return best_err;
+  return pid.best_err;
 }
 
 int main ()
@@ -262,8 +262,8 @@ int main ()
   PID pid_steer = PID();
   PID pid_throttle = PID();
 
-  pid_steer.Init({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
-  pid_throttle.Init({0.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+  pid_steer.Init({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
+  pid_throttle.Init({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode){
     auto s = hasData(data);
@@ -271,13 +271,6 @@ int main ()
     if (s != "") {
 
       auto data = json::parse(s);
-
-      if (data["restart"]){
-        cout << "RESTARTING" << endl;
-        twiddle(pid_steer.K, pid_steer.D, pid_steer.going_up, pid_steer.best_err, pid_steer.total_err, i);
-        twiddle(pid_throttle.K, pid_throttle.D, pid_throttle.going_up, pid_throttle.best_err, pid_throttle.total_err, i);
-        return;
-      }
 
       // create file to save values
       fstream file_steer;
@@ -363,7 +356,7 @@ int main ()
 
       yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
+      // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
       error_steer = yaw_exp - yaw;
 
       // Compute control to apply
@@ -440,6 +433,18 @@ int main ()
       //  min point threshold before doing the update
       // for high update rate use 19 for slow update rate use 4
       msgJson["update_point_thresh"] = 16;
+      msgJson["restart"] = false;
+
+
+      if (data["restart"]){
+        cout << "RESTARTING, Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        cout << "         Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
+
+        twiddle(pid_steer, i);
+        twiddle(pid_throttle, i);
+
+        msgJson["restart"] = true;
+      }
 
       auto msg = msgJson.dump();
 
@@ -447,6 +452,7 @@ int main ()
       file_steer.close();
       file_throttle.close();
 
+      cout << "Sending!" << endl;
       ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 
     }

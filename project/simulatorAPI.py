@@ -384,6 +384,7 @@ class World(object):
                 sensor.destroy()
         if self.player is not None:
             self.player.destroy()
+            self.player = None
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
@@ -796,9 +797,8 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(4.0)
         client.load_world('Town03')
-
         time.sleep(1)
 
         display = pygame.display.set_mode(
@@ -832,15 +832,10 @@ def game_loop(args):
 
         while True:
             yield from asyncio.sleep(0.01) # check if any data from the websocket
+            print("update_cycle: ", update_cycle, " wp: ", len(way_points))
 
             sim_time = world.hud.simulation_time - start_time
-
-            if sim_time >= 10.000:
-                print("Restarting")
-                start_time = world.hud.simulation_time
-                world.restart()
-                ws.send(json.dumps({'restart': True}))
-                continue
+            restart = False
 
             if controller.parse_events(client, world):
                 return
@@ -868,7 +863,10 @@ def game_loop(args):
                 location_y = t.location.y
                 location_z = t.location.z
 
-                ws.send(json.dumps({'restart': False, 'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
+                if sim_time >= 10.000:
+                    restart = True
+
+                ws.send(json.dumps({'restart': restart, 'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
 
             clock.tick_busy_loop(60)
             world.tick(clock)
@@ -876,6 +874,13 @@ def game_loop(args):
             world.move(sim_time)
             world.render(display)
             pygame.display.flip()
+
+            if restart:
+                print("Restarting, sim time: ", sim_time)
+                start_time = world.hud.simulation_time
+                world.restart()
+                # time.sleep(2)
+                # print("Awake!")
 
     except Exception as error:
         print('EXCEPTION IN GAME LOOP:')
@@ -959,11 +964,13 @@ def get_data():
             v_points[path_index] = new_v
 
     update_cycle = True
+    print("Ending get_data")
 
 
 @asyncio.coroutine
 def ws_event(loop):
     while True:
+        print("Starting get_data")
         yield from loop.run_in_executor(None, get_data)
 
 def main():
@@ -1022,12 +1029,12 @@ def main():
 
     #sio.connect('http://localhost:4567')
 
+    # use get_running_loop instead.
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        asyncio.wait([
-            ws_event(loop),
-            game_loop(args)
-        ])
+        # the result of wait is a future. If it is a coroutine object, it will run as a task
+        # In addition, wait's first element runs every object (function) concurrently and blocks
+        asyncio.wait([ws_event(loop),game_loop(args)])
     )
 
 if __name__ == '__main__':
