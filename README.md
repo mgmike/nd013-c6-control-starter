@@ -98,13 +98,20 @@ Eventually I figured it would be best to try on the workspace enviornment, but I
 Each part of PID is important. Proportional weight is typically the most influential as is the adjustment proportional to the cross track error. Just using P will cause oscillations so the derivative control uses slope of the error to smooth the curve and approach the expected value. The integral controller will reduce any bias in the long run by using the total error.
 
 To automatically tune the parameters, I would implement a twiddle optimization algorithm. To do this, a few things must be done:
+- Change the map
+    - This was easy, just added client.load_world('Town03') to initial game loop
 - First create a loop to generate the ego vehicle then remove it after a few seconds. 
     - To do this, I had to learn about spawning actors
-- Change the map
+    - The newly spawned vehicle spawns where the old destroyed vehicle was. Gotta fix
 - Edit the python code to send a flag indicating a vehicle reset
+    - Easy fix, just added a sim_time check the game_loop then send in the json
 - Receive the flag in the C++ code
+    - Easy as well, just added a check for the json restart key
 - Use the total error for steering and throttle to update parameters using twiddle
-- Reset PID errors
+    - Had to add and change a few variables in the pid_controller cpp and header files
+- Make vehicle reset to default spawn location
+    - I had to call world.destroy before setting world.player = None
+- Set beginning point of spirals to the vehicle. They kind of just drive off.
 
 The pros of a model free controller are:
 - It is less resource intensive

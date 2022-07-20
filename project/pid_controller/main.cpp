@@ -199,23 +199,32 @@ void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& o
 	obst_flag = true;
 }
 
-double twiddle(PID pid, int n, double tol = 0.2){
-  double err = pow(pid.total_err, 2) / n;
+double twiddle(PID pid, int &n, double tol = 0.2){
+  // double err = pow(pid.total_err, 2) / n;
+  double err = pid.total_err / n;
   int i = n % 3;
+  cout << "**********Twiddle*************" << endl; 
+  cout << "PID change: " << i << endl;
+  cout << "Going up: " << pid.going_up[i] << endl;
   if (pid.D[0] + pid.D[1] + pid.D[2] > tol){
     if (!pid.going_up[i]){
+      cout << "A" << endl;
       pid.going_up[i] = true;
       pid.K[i] += pid.D[i];
     } else {
+      cout << "B" << endl;
       pid.going_up[i] = false;
       pid.K[i] -= 2* pid.D[i];
     }
     
     if (err < pid.best_err){
+      cout << "C" << endl;
       pid.best_err = err;
       pid.D[i] *= 1.1;
     } else {
+        cout << "D" << endl;
       if (!pid.going_up[i]){
+        cout << "E" << endl;
         pid.K[i] += pid.D[i];
         pid.D[i] *= 0.9;
       }
@@ -224,7 +233,6 @@ double twiddle(PID pid, int n, double tol = 0.2){
 
   // Reset errors and count
   pid.total_err = 0.0;
-  n = 0;
   return pid.best_err;
 }
 
@@ -354,7 +362,7 @@ int main ()
       //   }
       // }
 
-      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
+      yaw_exp = angle_between_points(x_position, y_position, x_points[1], y_points[1]);
 
       // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
       error_steer = yaw_exp - yaw;
@@ -437,11 +445,11 @@ int main ()
 
 
       if (data["restart"]){
-        cout << "RESTARTING, Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
-        cout << "         Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
-
         twiddle(pid_steer, i);
         twiddle(pid_throttle, i);
+
+        cout << "RESTARTING, Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        cout << "         Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
 
         msgJson["restart"] = true;
       }
@@ -452,7 +460,7 @@ int main ()
       file_steer.close();
       file_throttle.close();
 
-      cout << "Sending!" << endl;
+      // cout << "Sending!" << endl;
       ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 
     }

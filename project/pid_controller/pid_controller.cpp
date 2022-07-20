@@ -46,7 +46,7 @@ double PID::TotalError() {
    double control;
 
    control = error;
-   total_err += error;
+   total_err += pow(error, 2);
    if (control < output_lim_min) control = output_lim_min;
    else if (control > output_lim_max) control = output_lim_max;
    return control;

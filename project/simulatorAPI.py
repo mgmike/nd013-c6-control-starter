@@ -65,6 +65,7 @@ import asyncio
 import json
 from websocket import create_connection
 
+way_points_lock = asyncio.Lock()
 way_points = []
 v_points = []
 spirals_x = []
@@ -208,42 +209,42 @@ class World(object):
         start = carla.Transform()
         end = carla.Transform()
 
-#         # draw spirals
-#         height_plot_scale = 1.0
-#         height_plot_offset = 1.0
-#         blue = carla.Color(r=0, g=0, b=255)
-#         green = carla.Color(r=0, g=255, b=0)
-#         red = carla.Color(r=255, g=0, b=0)
-#         for i in range(len(spirals_x)):
-#             previous_index = 0
-#             previous_speed = 0
-#             start = carla.Transform()
-#             end = carla.Transform()
-#             color = blue
-#             if i == spiral_idx[-1]:
-#                 color = green
-#             elif i in spiral_idx[:-1]:
-#                 color = red
-#             for index in range(1, len(spirals_x[i])):
-#                 start.location.x = spirals_x[i][previous_index]
-#                 start.location.y = spirals_y[i][previous_index]
-#                 end.location.x = spirals_x[i][index]
-#                 end.location.y = spirals_y[i][index]
-#                 start.location.z = height_plot_scale * spirals_v[i][previous_index] + height_plot_offset + _road_height
-#                 end.location.z =  height_plot_scale * spirals_v[i][index] + height_plot_offset + _road_height
-#                 self.world.debug.draw_line(start.location, end.location, 0.1, color, .1)
-#                 previous_index = index
+        # draw spirals
+        height_plot_scale = 1.0
+        height_plot_offset = 1.0
+        blue = carla.Color(r=0, g=0, b=255)
+        green = carla.Color(r=0, g=255, b=0)
+        red = carla.Color(r=255, g=0, b=0)
+        for i in range(len(spirals_x)):
+            previous_index = 0
+            previous_speed = 0
+            start = carla.Transform()
+            end = carla.Transform()
+            color = blue
+            if i == spiral_idx[-1]:
+                color = green
+            elif i in spiral_idx[:-1]:
+                color = red
+            for index in range(1, len(spirals_x[i])):
+                start.location.x = spirals_x[i][previous_index]
+                start.location.y = spirals_y[i][previous_index]
+                end.location.x = spirals_x[i][index]
+                end.location.y = spirals_y[i][index]
+                start.location.z = height_plot_scale * spirals_v[i][previous_index] + height_plot_offset + _road_height
+                end.location.z =  height_plot_scale * spirals_v[i][index] + height_plot_offset + _road_height
+                self.world.debug.draw_line(start.location, end.location, 0.1, color, .1)
+                previous_index = index
 
 
-#         # draw path
-#         previous_index = 0
-#         for index in range(res, len(way_points), res):
-#             start.location = way_points[previous_index].location
-#             end.location = way_points[index].location
-#             start.location.z = height_plot_scale * v_points[previous_index] + height_plot_offset + _road_height
-#             end.location.z = height_plot_scale * v_points[index] + height_plot_offset + _road_height
-#             self.world.debug.draw_line(start.location, end.location, 0.1, carla.Color(r=125, g=125, b=0), .1)
-#             previous_index = index
+        # draw path
+        previous_index = 0
+        for index in range(res, len(way_points), res):
+            start.location = way_points[previous_index].location
+            end.location = way_points[index].location
+            start.location.z = height_plot_scale * v_points[previous_index] + height_plot_offset + _road_height
+            end.location.z = height_plot_scale * v_points[index] + height_plot_offset + _road_height
+            self.world.debug.draw_line(start.location, end.location, 0.1, carla.Color(r=125, g=125, b=0), .1)
+            previous_index = index
 
         # increase wait time for debug
         wait_time = 0.0
@@ -383,8 +384,9 @@ class World(object):
                 sensor.stop()
                 sensor.destroy()
         if self.player is not None:
-            self.player.destroy()
-            self.player = None
+            if not self.player.destroy():
+                print("Player not destroyed!")
+            # self.player = None
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
@@ -787,9 +789,8 @@ def SpawnNPC(client, world, args, offset_x, offset_y):
 
     return SpawnActor(blueprint, actor_spawn)
 
-@asyncio.coroutine
-def game_loop(args):
-    global update_cycle
+async def game_loop(args):
+    global update_cycle, last_move_time, way_points
     pygame.init()
     pygame.font.init()
     world = None
@@ -831,8 +832,8 @@ def game_loop(args):
 #         forward_speed = measurement_data.player_measurements.forward_speed
 
         while True:
-            yield from asyncio.sleep(0.01) # check if any data from the websocket
-            print("update_cycle: ", update_cycle, " wp: ", len(way_points))
+            await asyncio.sleep(0.01) # check if any data from the websocket
+            # print("update_cycle: ", update_cycle, " wp: ", len(way_points))
 
             sim_time = world.hud.simulation_time - start_time
             restart = False
@@ -877,10 +878,19 @@ def game_loop(args):
 
             if restart:
                 print("Restarting, sim time: ", sim_time)
+                print("     Waypoints: ", len(way_points))
+                # for _ in range(0, len(way_points)):
+                #     way_points.pop(0)
                 start_time = world.hud.simulation_time
+                world.destroy()
+                world.player = None
                 world.restart()
+                last_move_time = -1
+                async with way_points_lock:
+                    way_points = []
                 # time.sleep(2)
                 # print("Awake!")
+                
 
     except Exception as error:
         print('EXCEPTION IN GAME LOOP:')
@@ -967,11 +977,10 @@ def get_data():
     print("Ending get_data")
 
 
-@asyncio.coroutine
-def ws_event(loop):
+async def ws_event(loop):
     while True:
         print("Starting get_data")
-        yield from loop.run_in_executor(None, get_data)
+        await loop.run_in_executor(None, get_data)
 
 def main():
     argparser = argparse.ArgumentParser(
