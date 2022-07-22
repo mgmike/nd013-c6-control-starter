@@ -119,7 +119,7 @@ To automatically tune the parameters, I implemented a twiddle optimization algor
     - Uses last line to update weights at the very start of the c++ code to resume saved progress
 - Set the goal velocity to a constant value. It is using the generated spirals now.
 
-I had to alter the twiddle algorithm discribed in the lesson because twiddle calls a function to run the simulation. The implementation of twiddle in my code is the opposite as the twiddle function is called to update weights which will be used during the simulation which is asyncronus. I reorderd the code such that when twiddle is called, the simulation has ran and there errors are avalable, but the function must be called again to update any weights. 
+I had to alter the twiddle algorithm discribed in the lesson because twiddle calls a function to run the simulation. The implementation of twiddle in my code is the opposite as the twiddle function is called to update weights which will be used during the simulation which is asyncronus. I reorderd the code such that when twiddle is called, the simulation has ran and the cross track error, total error, and best error are avalable, but the function must be called again to update any weights. 
 
 The most challenging part is that for every weight, P, I, and D, a simulation must be ran either 1, or 2 times. Also, the next time the simulation is ran, the change variable, D increases after it is applied to the weight but also after the other weights are solved for, which is outside of the scope of the twiddle function. For example, if D increases by 1.1 times for the P controller, that increase should not take effect immedietly as it will mess with twiddle for I and D controllers and should only be added on the next iteration of P. To solve the first issue of either 1 or 2 runs, I added a status list for each weight, 'position' which tracks if the weight has been added to (which is always done before the first simulation), subtracted from (which is done if the added weight did not improve performance and so the same PID weight will be simulated again) or is back at the center. To solve the second issue of only appling the weight at the right time, I added another weight vector Kn or K next, which holds the value K will have during its next iteration. After twiddle is complete for a PID weight, it assigns the next weight its Kn so that it takes effect the next time the simulation runs. For example, the last simulation for P finishes, it then assigns the I weight Kn[I] to K[I] so that the next run will start off increasing K[I] emulating the first p[i] += dp[i] from the lesson.
 
@@ -132,10 +132,4 @@ The pros of a model free controller are:
 The cons are:
 - Only tuned for the simulator vehicle and must be tuned again for each vehicle (Non generic)
 
-
-### Tips:
-
-- When you wil be testing your c++ code, restart the Carla simulator to remove the former car from the simulation.
-- If the simulation freezes on the desktop mode but is still running on the terminal, close the desktop and restart it.
-- When you will be tuning the PID parameters, try between those values:
 
