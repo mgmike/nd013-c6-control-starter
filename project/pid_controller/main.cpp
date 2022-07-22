@@ -471,7 +471,8 @@ int main ()
       double error_throttle;
 
       // modify the following line for step 2
-      error_throttle = velocity - v_points[v_points.size() - 1];
+      // error_throttle = velocity - v_points[v_points.size() - 1];
+      error_throttle = velocity - 10.0;
 
       double throttle_output;
       double brake_output;
@@ -523,9 +524,9 @@ int main ()
 
 
       if (data["restart"]){
-        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
         twiddle(pid_steer);
-        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
+        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " D: " << pid_throttle.K[1] << " I: " << pid_throttle.K[2] << endl;
         twiddle(pid_throttle);
 
 
