@@ -112,6 +112,8 @@ To automatically tune the parameters, I would implement a twiddle optimization a
 - Make vehicle reset to default spawn location
     - I had to call world.destroy before setting world.player = None
 - Set beginning point of spirals to the vehicle. They kind of just drive off.
+- Save K and D values and update if they are in a file.
+- Set the goal velocity to a constant value. It is using the generated spirals now.
 
 The pros of a model free controller are:
 - It is less resource intensive

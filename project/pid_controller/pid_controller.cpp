@@ -22,6 +22,8 @@ void PID::Init(vector<double> Ki, double output_lim_maxi, double output_lim_mini
 }
 void PID::Init(vector<double> Ki, vector<double> Di, double output_lim_maxi, double output_lim_mini){
   D = Di;
+  // Maybe Kn is the same as Di?
+  Kn = Di;
   PID::Init(Ki, output_lim_maxi, output_lim_mini);
 }
 

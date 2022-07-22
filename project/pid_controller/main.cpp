@@ -199,41 +199,114 @@ void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& o
 	obst_flag = true;
 }
 
-double twiddle(PID pid, int &n, double tol = 0.2){
-  // double err = pow(pid.total_err, 2) / n;
-  double err = pid.total_err / n;
-  int i = n % 3;
-  cout << "**********Twiddle*************" << endl; 
-  cout << "PID change: " << i << endl;
-  cout << "Going up: " << pid.going_up[i] << endl;
-  if (pid.D[0] + pid.D[1] + pid.D[2] > tol){
-    if (!pid.going_up[i]){
-      cout << "A" << endl;
-      pid.going_up[i] = true;
+double twiddle(PID &pid, double tol = 0.2){
+
+  double err = pid.total_err / pid.n;
+  int i = pid.n % 3;
+
+  if (err < pid.best_err){
+    pid.best_err = err;
+    pid.D[i] *= 1.1;
+    pid.position[i] = 0;
+  } else {
+    if (pid.position[i] == 1){
+      pid.K[i] -= 2 * pid.D[i];
+      pid.position[i] = -1;
+    } else if (pid.position[i] == -1) {
       pid.K[i] += pid.D[i];
-    } else {
-      cout << "B" << endl;
-      pid.going_up[i] = false;
-      pid.K[i] -= 2* pid.D[i];
+      pid.D[i] *= 0.9;
+      pid.position[i] = 0;
     }
-    
-    if (err < pid.best_err){
-      cout << "C" << endl;
-      pid.best_err = err;
-      pid.D[i] *= 1.1;
-    } else {
-        cout << "D" << endl;
-      if (!pid.going_up[i]){
-        cout << "E" << endl;
-        pid.K[i] += pid.D[i];
-        pid.D[i] *= 0.9;
-      }
+    if (pid.position[i] == 0){
+      pid.Kn[i] = pid.K[i] + pid.D[i];
+      pid.n++;
+      pid.K[pid.n % 3] = pid.Kn[pid.n % 3];
+      pid.position[i] = 1;
     }
   }
 
   // Reset errors and count
   pid.total_err = 0.0;
   return pid.best_err;
+}
+
+void updatePidFromFile2(PID &pid_steer, PID &pid_throttle){
+  fstream file_pid;
+  file_pid.open("pid_weights.txt");
+  // Read in file and update the pid weights if there are any in there
+  file_pid.seekg(-1, ios_base::end);
+  bool dataInFile = true;
+  bool keepLooping = true;
+  while(keepLooping){
+    char ch;
+    file_pid.get(ch);
+
+    if ((int)file_pid.tellg() <= 1){
+      keepLooping = false;
+      dataInFile = false;
+    } else if (ch == '\n'){
+      keepLooping = false;
+    } else {
+      file_pid.seekg(-2, ios_base::cur);
+    }
+  }
+
+  if (dataInFile){
+    string lastLine;
+    getline(file_pid, lastLine);
+    //set pid variables here
+    string delimiter = ",";
+    size_t pos = 0;
+    string token;
+    int pid_i = 0;
+    while ((pos = lastLine.find(delimiter)) != std::string::npos) {
+      token = lastLine.substr(0, pos);
+      std::cout << token << " ";
+      lastLine.erase(0, pos + delimiter.length());
+      if (pid_i < 3){
+        pid_steer.K[pid_i] = stoi(token);
+      } else if (pid_i < 6){
+        pid_steer.D[pid_i % 3] = stoi(token);
+      } else if (pid_i < 9) {
+        pid_throttle.K[pid_i % 3] = stoi(token);
+      } else if (pid_i < 12) {
+        pid_throttle.D[pid_i % 3] = stoi(token);
+      }
+    }
+    cout << " Token: " << token << endl;
+  }
+  file_pid.close();
+}
+
+void updatePidFromFile(PID &pid_steer, PID &pid_throttle){
+  fstream file_pid;
+  file_pid.open("pid_weights.txt");
+  string lastLine;
+  while (!file_pid.eof()){
+    file_pid >> lastLine;
+  }
+  cout << "Found pid values in the file, using: ";
+  //set pid variables here
+  string delimiter = ",";
+  size_t pos = 0;
+  string token = "";
+  int pid_i = 0;
+  while (!lastLine.empty() && (pos = lastLine.find(delimiter)) != std::string::npos) {
+    token = lastLine.substr(0, pos);
+    std::cout << token << " ";
+    lastLine.erase(0, pos + delimiter.length());
+    if (pid_i < 3){
+      pid_steer.K[pid_i] = stoi(token);
+    } else if (pid_i < 6){
+      pid_steer.D[pid_i % 3] = stoi(token);
+    } else if (pid_i < 9) {
+      pid_throttle.K[pid_i % 3] = stoi(token);
+    } else if (pid_i < 12) {
+      pid_throttle.D[pid_i % 3] = stoi(token);
+    }
+    pid_i++;
+  }
+  cout << " Token: " << token << endl;
 }
 
 int main ()
@@ -251,6 +324,9 @@ int main ()
   fstream file_throttle;
   file_throttle.open("throttle_pid_data.txt", std::ofstream::out | std::ofstream::trunc);
   file_throttle.close();
+  fstream file_pid;
+  file_pid.open("pid_weights.txt", std::ofstream::in | std::ofstream::app);
+  file_pid.close();
 
   time_t prev_timer;
   time_t timer;
@@ -270,8 +346,10 @@ int main ()
   PID pid_steer = PID();
   PID pid_throttle = PID();
 
-  pid_steer.Init({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
-  pid_throttle.Init({1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+  pid_steer.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
+  pid_throttle.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+
+  updatePidFromFile(pid_steer, pid_throttle);
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode){
     auto s = hasData(data);
@@ -362,14 +440,14 @@ int main ()
       //   }
       // }
 
-      yaw_exp = angle_between_points(x_position, y_position, x_points[1], y_points[1]);
+      // yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
-      error_steer = yaw_exp - yaw;
+      // // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
+      // error_steer = yaw_exp - yaw;
 
-      // Compute control to apply
-      pid_steer.UpdateError(error_steer);
-      steer_output = - pid_steer.TotalError();
+      // // Compute control to apply
+      // pid_steer.UpdateError(error_steer);
+      // steer_output = - pid_steer.TotalError();
 
       // cout << "Steer output: " << steer_output << endl;
 
@@ -445,12 +523,20 @@ int main ()
 
 
       if (data["restart"]){
-        twiddle(pid_steer, i);
-        twiddle(pid_throttle, i);
+        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        twiddle(pid_steer);
+        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
+        twiddle(pid_throttle);
 
-        cout << "RESTARTING, Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
-        cout << "         Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
 
+        fstream file_pid;
+        file_pid.open("pid_weights.txt", std::ofstream::app);
+        file_pid << pid_steer.K[0] << "," << pid_steer.K[1] << "," << pid_steer.K[2] << "," ;
+        file_pid << pid_steer.D[0] << "," << pid_steer.D[1] << "," << pid_steer.D[2] << "," ;
+        file_pid << pid_throttle.K[0] << "," << pid_throttle.K[1] << "," << pid_throttle.K[2] << "," ;
+        file_pid << pid_throttle.D[0] << "," << pid_throttle.D[1] << "," << pid_throttle.D[2] << "," << endl;
+        file_pid.close();
+        
         msgJson["restart"] = true;
       }
 

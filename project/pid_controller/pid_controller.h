@@ -42,8 +42,13 @@ public:
    double output_lim_max;
    double output_lim_min;
 
+    /*
+    * Twiddle variables
+    */
 
-   bool going_up[3] = {true};
+   int position[3] = {1,1,1};
+   std::vector<double> Kn;
+   int n = 0;
   
     /*
     * Delta time
