@@ -2,3 +2,8 @@
 .idea
 build/
 .o
+project/cserver_dir
+project/pid_controller/CMakeFiles
+project/eigen-3.3.7
+project/libcarla-install
+project/rpclib
