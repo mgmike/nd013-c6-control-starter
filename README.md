@@ -97,13 +97,34 @@ Eventually I figured it would be best to try on the workspace enviornment, but I
 
 Each part of PID is important. Proportional weight is typically the most influential as is the adjustment proportional to the cross track error. Just using P will cause oscillations so the derivative control uses slope of the error to smooth the curve and approach the expected value. The integral controller will reduce any bias in the long run by using the total error.
 
-To automatically tune the parameters, I would implement a twiddle optimization algorithm. To do this, a few things must be done:
-- First create a loop to generate the ego vehicle then remove it after a few seconds. 
+To automatically tune the parameters, I implemented a twiddle optimization algorithm. To do this, a few things were done:
 - Change the map
+    - This was easy, just added client.load_world('Town03') to initial game loop
+- Create a loop to generate the ego vehicle then remove it after a few seconds. 
+    - To do this, I had to learn about spawning actors
+    - The newly spawned vehicle spawns where the old destroyed vehicle was, this was fixed a few points below
 - Edit the python code to send a flag indicating a vehicle reset
+    - Easy fix, just added a sim_time check for 10 seconds the game_loop then send restart = true in the json
 - Receive the flag in the C++ code
+    - Easy as well, just added a check for the json restart key
 - Use the total error for steering and throttle to update parameters using twiddle
-- Reset PID errors
+    - Had to add and change a few variables in the pid_controller cpp and header files
+- Make vehicle reset to default spawn location
+    - I had to call world.destroy before setting world.player = None
+- Set beginning point of spirals to the vehicle. They kind of just drive off.
+    - To do this, I had to set way_points to []
+- Save K and D values and update if they are in a file.
+    - Added a new file pid_weights.txt
+    - After every twiddle call, add weights and differences to file saving progress
+    - Uses last line to update weights at the very start of the c++ code to resume saved progress
+- Set the goal velocity to a constant value. It is using the generated spirals now.
+
+I had to alter the twiddle algorithm discribed in the lesson because twiddle calls a function to run the simulation. The implementation of twiddle in my code is the opposite as the twiddle function is called to update weights which will be used during the simulation which is asyncronus. I reorderd the code such that when twiddle is called, the simulation has ran and there errors are avalable, but the function must be called again to update any weights. 
+
+The most challenging part is that for every weight, P, I, and D, a simulation must be ran either 1, or 2 times. Also, the next time the simulation is ran, the change variable, D increases after it is applied to the weight but also after the other weights are solved for, which is outside of the scope of the twiddle function. For example, if D increases by 1.1 times for the P controller, that increase should not take effect immedietly as it will mess with twiddle for I and D controllers and should only be added on the next iteration of P. To solve the first issue of either 1 or 2 runs, I added a status list for each weight, 'position' which tracks if the weight has been added to (which is always done before the first simulation), subtracted from (which is done if the added weight did not improve performance and so the same PID weight will be simulated again) or is back at the center. To solve the second issue of only appling the weight at the right time, I added another weight vector Kn or K next, which holds the value K will have during its next iteration. After twiddle is complete for a PID weight, it assigns the next weight its Kn so that it takes effect the next time the simulation runs. For example, the last simulation for P finishes, it then assigns the I weight Kn[I] to K[I] so that the next run will start off increasing K[I] emulating the first p[i] += dp[i] from the lesson.
+
+The result of this in the twiddle quiz enviornment works exactly as the original however, in this project the results are not ideal. In my implementation every 10 seconds, the vehicle is destroyed and replaced at the start, this is when twiddle is called to update weights. There are no NPC vehicles and steering is disabled so that I only find the PID weights for throttle. I also hardcoded 10.0 m/s as the desired speed removing waypoints and spirals to set up an ideal enviornment. After over 400 simulations, the error is pretty low at only 0.025 however, the vehicle does not move at all which makes no sense. It should be penelized for the actual velocity of 0.0 m/s being so far from the desired 10.0 m/s. The throttle pid weights are P: -0.00328152 D: 0.105121 I: 0 which also doesnt seem right. Ill fix this later. 
+
 
 The pros of a model free controller are:
 - It is less resource intensive

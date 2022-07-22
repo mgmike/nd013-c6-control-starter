@@ -22,6 +22,8 @@ void PID::Init(vector<double> Ki, double output_lim_maxi, double output_lim_mini
 }
 void PID::Init(vector<double> Ki, vector<double> Di, double output_lim_maxi, double output_lim_mini){
   D = Di;
+  // Maybe Kn is the same as Di?
+  Kn = Di;
   PID::Init(Ki, output_lim_maxi, output_lim_mini);
 }
 
@@ -46,7 +48,7 @@ double PID::TotalError() {
    double control;
 
    control = error;
-   total_err += error;
+   total_err += pow(error, 2);
    if (control < output_lim_min) control = output_lim_min;
    else if (control > output_lim_max) control = output_lim_max;
    return control;

@@ -65,6 +65,7 @@ import asyncio
 import json
 from websocket import create_connection
 
+way_points_lock = asyncio.Lock()
 way_points = []
 v_points = []
 spirals_x = []
@@ -208,42 +209,42 @@ class World(object):
         start = carla.Transform()
         end = carla.Transform()
 
-#         # draw spirals
-#         height_plot_scale = 1.0
-#         height_plot_offset = 1.0
-#         blue = carla.Color(r=0, g=0, b=255)
-#         green = carla.Color(r=0, g=255, b=0)
-#         red = carla.Color(r=255, g=0, b=0)
-#         for i in range(len(spirals_x)):
-#             previous_index = 0
-#             previous_speed = 0
-#             start = carla.Transform()
-#             end = carla.Transform()
-#             color = blue
-#             if i == spiral_idx[-1]:
-#                 color = green
-#             elif i in spiral_idx[:-1]:
-#                 color = red
-#             for index in range(1, len(spirals_x[i])):
-#                 start.location.x = spirals_x[i][previous_index]
-#                 start.location.y = spirals_y[i][previous_index]
-#                 end.location.x = spirals_x[i][index]
-#                 end.location.y = spirals_y[i][index]
-#                 start.location.z = height_plot_scale * spirals_v[i][previous_index] + height_plot_offset + _road_height
-#                 end.location.z =  height_plot_scale * spirals_v[i][index] + height_plot_offset + _road_height
-#                 self.world.debug.draw_line(start.location, end.location, 0.1, color, .1)
-#                 previous_index = index
+        # # draw spirals
+        # height_plot_scale = 1.0
+        # height_plot_offset = 1.0
+        # blue = carla.Color(r=0, g=0, b=255)
+        # green = carla.Color(r=0, g=255, b=0)
+        # red = carla.Color(r=255, g=0, b=0)
+        # for i in range(len(spirals_x)):
+        #     previous_index = 0
+        #     previous_speed = 0
+        #     start = carla.Transform()
+        #     end = carla.Transform()
+        #     color = blue
+        #     if i == spiral_idx[-1]:
+        #         color = green
+        #     elif i in spiral_idx[:-1]:
+        #         color = red
+        #     for index in range(1, len(spirals_x[i])):
+        #         start.location.x = spirals_x[i][previous_index]
+        #         start.location.y = spirals_y[i][previous_index]
+        #         end.location.x = spirals_x[i][index]
+        #         end.location.y = spirals_y[i][index]
+        #         start.location.z = height_plot_scale * spirals_v[i][previous_index] + height_plot_offset + _road_height
+        #         end.location.z =  height_plot_scale * spirals_v[i][index] + height_plot_offset + _road_height
+        #         self.world.debug.draw_line(start.location, end.location, 0.1, color, .1)
+        #         previous_index = index
 
 
-#         # draw path
-#         previous_index = 0
-#         for index in range(res, len(way_points), res):
-#             start.location = way_points[previous_index].location
-#             end.location = way_points[index].location
-#             start.location.z = height_plot_scale * v_points[previous_index] + height_plot_offset + _road_height
-#             end.location.z = height_plot_scale * v_points[index] + height_plot_offset + _road_height
-#             self.world.debug.draw_line(start.location, end.location, 0.1, carla.Color(r=125, g=125, b=0), .1)
-#             previous_index = index
+        # # draw path
+        # previous_index = 0
+        # for index in range(res, len(way_points), res):
+        #     start.location = way_points[previous_index].location
+        #     end.location = way_points[index].location
+        #     start.location.z = height_plot_scale * v_points[previous_index] + height_plot_offset + _road_height
+        #     end.location.z = height_plot_scale * v_points[index] + height_plot_offset + _road_height
+        #     self.world.debug.draw_line(start.location, end.location, 0.1, carla.Color(r=125, g=125, b=0), .1)
+        #     previous_index = index
 
         # increase wait time for debug
         wait_time = 0.0
@@ -383,7 +384,9 @@ class World(object):
                 sensor.stop()
                 sensor.destroy()
         if self.player is not None:
-            self.player.destroy()
+            if not self.player.destroy():
+                print("Player not destroyed!")
+            # self.player = None
 
 # ==============================================================================
 # -- HUD -----------------------------------------------------------------------
@@ -786,9 +789,8 @@ def SpawnNPC(client, world, args, offset_x, offset_y):
 
     return SpawnActor(blueprint, actor_spawn)
 
-@asyncio.coroutine
-def game_loop(args):
-    global update_cycle
+async def game_loop(args):
+    global update_cycle, last_move_time, way_points
     pygame.init()
     pygame.font.init()
     world = None
@@ -796,9 +798,8 @@ def game_loop(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(4.0)
         client.load_world('Town03')
-
         time.sleep(1)
 
         display = pygame.display.set_mode(
@@ -819,11 +820,11 @@ def game_loop(args):
         batch.append(SpawnNPC(client, world, args, 65, -3 *1.5))
         batch.append(SpawnNPC(client, world, args, 110, -1 * 1.5))
 
-        for response in carla.Client.apply_batch_sync(client, batch):
-            if response.error:
-                logging.error(response.error)
-            else:
-                vehicles_list.append(response.actor_id)
+        # for response in carla.Client.apply_batch_sync(client, batch):
+        #     if response.error:
+        #         logging.error(response.error)
+        #     else:
+        #         vehicles_list.append(response.actor_id)
 
         start_time = world.hud.simulation_time
 
@@ -831,16 +832,11 @@ def game_loop(args):
 #         forward_speed = measurement_data.player_measurements.forward_speed
 
         while True:
-            yield from asyncio.sleep(0.01) # check if any data from the websocket
+            await asyncio.sleep(0.01) # check if any data from the websocket
+            # print("update_cycle: ", update_cycle, " wp: ", len(way_points))
 
             sim_time = world.hud.simulation_time - start_time
-
-            if sim_time >= 10.000:
-                print("Restarting")
-                start_time = world.hud.simulation_time
-                world.restart()
-                ws.send(json.dumps({'restart': True}))
-                continue
+            restart = False
 
             if controller.parse_events(client, world):
                 return
@@ -868,7 +864,10 @@ def game_loop(args):
                 location_y = t.location.y
                 location_z = t.location.z
 
-                ws.send(json.dumps({'restart': False, 'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
+                if sim_time >= 10.000:
+                    restart = True
+
+                ws.send(json.dumps({'restart': restart, 'traj_x': x_points, 'traj_y': y_points, 'traj_v': v_points ,'yaw': _prev_yaw, "velocity": velocity, 'time': sim_time, 'waypoint_x': waypoint_x, 'waypoint_y': waypoint_y, 'waypoint_t': waypoint_t, 'waypoint_j': waypoint_j, 'tl_state': _tl_state, 'obst_x': obst_x, 'obst_y': obst_y, 'location_x': location_x, 'location_y': location_y, 'location_z': location_z } ))
 
             clock.tick_busy_loop(60)
             world.tick(clock)
@@ -876,6 +875,22 @@ def game_loop(args):
             world.move(sim_time)
             world.render(display)
             pygame.display.flip()
+
+            if restart:
+                print("Restarting, sim time: ", sim_time)
+                print("     Waypoints: ", len(way_points))
+                # for _ in range(0, len(way_points)):
+                #     way_points.pop(0)
+                start_time = world.hud.simulation_time
+                world.destroy()
+                world.player = None
+                world.restart()
+                last_move_time = -1
+                async with way_points_lock:
+                    way_points = []
+                # time.sleep(2)
+                # print("Awake!")
+                
 
     except Exception as error:
         print('EXCEPTION IN GAME LOOP:')
@@ -959,12 +974,15 @@ def get_data():
             v_points[path_index] = new_v
 
     update_cycle = True
+    print("Ending get_data")
 
 
-@asyncio.coroutine
-def ws_event(loop):
+async def ws_event(loop):
     while True:
-        yield from loop.run_in_executor(None, get_data)
+        print("Starting get_data")
+        # Wait until get_data finishes to restart the while loop.
+        # We need run_in_executor because ws.recv() is blocking
+        await loop.run_in_executor(None, get_data)
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -1022,12 +1040,12 @@ def main():
 
     #sio.connect('http://localhost:4567')
 
+    # use get_running_loop instead.
     loop = asyncio.get_event_loop()
     loop.run_until_complete(
-        asyncio.wait([
-            ws_event(loop),
-            game_loop(args)
-        ])
+        # the result of wait is a future. If it is a coroutine object, it will run as a task
+        # In addition, wait's first element runs every object (function) concurrently and blocks
+        asyncio.wait([ws_event(loop),game_loop(args)])
     )
 
 if __name__ == '__main__':

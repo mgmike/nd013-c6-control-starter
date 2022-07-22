@@ -64,7 +64,10 @@
         "memory_resource": "cpp",
         "random": "cpp",
         "set": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "*.ipp": "cpp",
+        "csetjmp": "cpp",
+        "rope": "cpp"
     },
     "cmake.sourceDirectory": "${workspaceFolder}/project/pid_controller/CMakeLists.txt"
 }
