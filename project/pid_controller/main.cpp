@@ -424,32 +424,13 @@ int main ()
       double dy = 0.0;
       double yaw_exp = 0.0;
 
-      // cout << "Current location, x: " << x_position << " y: " << y_position << endl;
-
-      double closest_distance = numeric_limits<int>::max();
-      int index_closest_pt = -1;
-
-      // Code to find the closest waypoint to the vehicle.
-
-      // for (int i = 0; i < x_points.size(); i++) {
-      //   cout << "\tWaypoint x: " << x_points[i] << " y: " << y_points[i] << endl;
-      //   double temp_distance = distance_between_points(x_position, y_position, x_points[i], y_points[i]);
-      //   if (temp_distance < closest_distance){
-      //     closest_distance = temp_distance;
-      //     index_closest_pt = i;
-      //   }
-      // }
-
       yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      // // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
       error_steer = yaw_exp - yaw;
 
       // // Compute control to apply
       pid_steer.UpdateError(error_steer);
       steer_output = - pid_steer.TotalError();
-
-      // cout << "Steer output: " << steer_output << endl;
 
       // Save data
       file_steer.seekg(std::ios::beg);
@@ -470,7 +451,6 @@ int main ()
       // Compute error of speed
       double error_throttle;
 
-      // modify the following line for step 2
       error_throttle = velocity - v_points[v_points.size() - 1];
       // error_throttle = velocity - 10.0;
 
@@ -547,7 +527,6 @@ int main ()
       file_steer.close();
       file_throttle.close();
 
-      // cout << "Sending!" << endl;
       ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 
     }
