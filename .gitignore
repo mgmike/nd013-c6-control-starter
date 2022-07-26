@@ -4,6 +4,6 @@ build/
 .o
 project/cserver_dir
 project/pid_controller/CMakeFiles
-project/eigen-3.3.7
-project/libcarla-install
-project/rpclib
+project/pid_controller/eigen-3.3.7
+project/pid_controller/libcarla-install
+project/pid_controller/rpclib

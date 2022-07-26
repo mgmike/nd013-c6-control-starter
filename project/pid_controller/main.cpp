@@ -440,14 +440,14 @@ int main ()
       //   }
       // }
 
-      // yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
+      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
       // // cout << "Expected yaw: " << yaw_exp << " actual yaw: " << yaw << endl;
-      // error_steer = yaw_exp - yaw;
+      error_steer = yaw_exp - yaw;
 
       // // Compute control to apply
-      // pid_steer.UpdateError(error_steer);
-      // steer_output = - pid_steer.TotalError();
+      pid_steer.UpdateError(error_steer);
+      steer_output = - pid_steer.TotalError();
 
       // cout << "Steer output: " << steer_output << endl;
 
@@ -471,8 +471,8 @@ int main ()
       double error_throttle;
 
       // modify the following line for step 2
-      // error_throttle = velocity - v_points[v_points.size() - 1];
-      error_throttle = velocity - 10.0;
+      error_throttle = velocity - v_points[v_points.size() - 1];
+      // error_throttle = velocity - 10.0;
 
       double throttle_output;
       double brake_output;
