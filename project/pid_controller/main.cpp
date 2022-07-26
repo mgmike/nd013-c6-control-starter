@@ -408,7 +408,7 @@ int main ()
       ////////////////////////////////////////
 
       // Update the delta time with the previous command
-      pid_steer.UpdateDeltaTime(new_delta_time);
+      // pid_steer.UpdateDeltaTime(new_delta_time);
 
       // Compute steer error
       double error_steer;
@@ -424,22 +424,22 @@ int main ()
       double dy = 0.0;
       double yaw_exp = 0.0;
 
-      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
+      // yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      error_steer = yaw_exp - yaw;
+      // error_steer = yaw_exp - yaw;
 
       // // Compute control to apply
-      pid_steer.UpdateError(error_steer);
-      steer_output = - pid_steer.TotalError();
+      // pid_steer.UpdateError(error_steer);
+      // steer_output = - pid_steer.TotalError();
 
       // Save data
-      file_steer.seekg(std::ios::beg);
-      for(int j=0; j < i - 1; ++j) {
-          file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      }
-      file_steer  << i ;
-      file_steer  << " " << error_steer;
-      file_steer  << " " << steer_output << endl;
+      // file_steer.seekg(std::ios::beg);
+      // for(int j=0; j < i - 1; ++j) {
+      //     file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      // }
+      // file_steer  << i ;
+      // file_steer  << " " << error_steer;
+      // file_steer  << " " << steer_output << endl;
 
       ////////////////////////////////////////
       // Throttle control
@@ -451,8 +451,8 @@ int main ()
       // Compute error of speed
       double error_throttle;
 
-      error_throttle = velocity - v_points[v_points.size() - 1];
-      // error_throttle = velocity - 10.0;
+      // error_throttle = velocity - v_points[v_points.size() - 1];
+      error_throttle = velocity - 10.0;
 
       double throttle_output;
       double brake_output;

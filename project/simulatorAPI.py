@@ -65,7 +65,7 @@ import asyncio
 import json
 from websocket import create_connection
 
-twiddle = False
+twiddle = True
 
 way_points_lock = asyncio.Lock()
 way_points = []
