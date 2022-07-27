@@ -46,9 +46,10 @@ public:
     * Twiddle variables
     */
 
-   int position[3] = {1,1,1};
+   int position[3] = {1,0,0};
    std::vector<double> Kn;
    int n = 0;
+   int nn = 0;
   
     /*
     * Delta time

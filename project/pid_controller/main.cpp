@@ -217,11 +217,17 @@ double twiddle(PID &pid, double tol = 0.2){
       pid.D[i] *= 0.9;
       pid.position[i] = 0;
     }
-    if (pid.position[i] == 0){
+  }
+  if (pid.position[i] == 0){
+    pid.position[i] = 1;
+    if (pid.nn < 5){
+      pid.K[i] = pid.K[i] + pid.D[i];
+      pid.nn++;
+    } else {
       pid.Kn[i] = pid.K[i] + pid.D[i];
       pid.n++;
+      pid.nn = 0;
       pid.K[pid.n % 3] = pid.Kn[pid.n % 3];
-      pid.position[i] = 1;
     }
   }
 
@@ -347,7 +353,7 @@ int main ()
   PID pid_throttle = PID();
 
   pid_steer.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
-  pid_throttle.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+  pid_throttle.Init({2.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
 
   updatePidFromFile(pid_steer, pid_throttle);
 
@@ -452,7 +458,7 @@ int main ()
       double error_throttle;
 
       // error_throttle = velocity - v_points[v_points.size() - 1];
-      error_throttle = velocity - 10.0;
+      error_throttle = velocity - 5.0;
 
       double throttle_output;
       double brake_output;
@@ -504,8 +510,8 @@ int main ()
 
 
       if (data["restart"]){
-        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
-        twiddle(pid_steer);
+        // cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
+        // twiddle(pid_steer);
         cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " D: " << pid_throttle.K[1] << " I: " << pid_throttle.K[2] << endl;
         twiddle(pid_throttle);
 
