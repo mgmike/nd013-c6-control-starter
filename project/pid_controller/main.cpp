@@ -282,16 +282,20 @@ void updatePidFromFile(PID &pid_steer, PID &pid_throttle){
   fstream file_pid;
   file_pid.open("pid_weights.txt");
   string lastLine;
+
+  // Find last line of file
   while (!file_pid.eof()){
     file_pid >> lastLine;
   }
-  cout << "Found pid values in the file, using: ";
   //set pid variables here
   string delimiter = ",";
   size_t pos = 0;
   string token = "";
   int pid_i = 0;
+
+  // If the last line is not empty, replace the PID controls with the saved data
   while (!lastLine.empty() && (pos = lastLine.find(delimiter)) != std::string::npos) {
+    cout << "Found pid values in the file, using: ";
     token = lastLine.substr(0, pos);
     std::cout << token << " ";
     lastLine.erase(0, pos + delimiter.length());
@@ -305,8 +309,8 @@ void updatePidFromFile(PID &pid_steer, PID &pid_throttle){
       pid_throttle.D[pid_i % 3] = stoi(token);
     }
     pid_i++;
+    cout << " Token: " << token << endl;
   }
-  cout << " Token: " << token << endl;
 }
 
 int main ()
@@ -346,8 +350,18 @@ int main ()
   PID pid_steer = PID();
   PID pid_throttle = PID();
 
-  pid_steer.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.2, -1.2);
-  pid_throttle.Init({1.0, 0.0, 0.0}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+  pid_steer.Init({0.3, 0.001, 0.3}, {1.0, 1.0, 1.0}, 1.2, -1.2);
+  pid_throttle.Init({0.2, 0.001, 0.1}, {1.0, 1.0, 1.0}, 1.0, -1.0);
+
+
+  // double steer_weights[] = {0.2, 0.01, 0.05};
+  // double throttle_weights[] = {1.5, 0.8, 0.001};
+
+
+  // double steer_weights[] = {0.3, 0.001, 0.3};
+  // double throttle_weights[] = {0.2, 0.001, 0.1};
+
+// Throttle Error: 4.62479 P: 0.0506081 D: 0.0561622 I: 0.0122569
 
   updatePidFromFile(pid_steer, pid_throttle);
 
@@ -504,9 +518,9 @@ int main ()
 
 
       if (data["restart"]){
-        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
+        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
         twiddle(pid_steer);
-        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " D: " << pid_throttle.K[1] << " I: " << pid_throttle.K[2] << endl;
+        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
         twiddle(pid_throttle);
 
 

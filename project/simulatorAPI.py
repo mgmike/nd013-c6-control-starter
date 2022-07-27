@@ -822,11 +822,11 @@ async def game_loop(args):
         batch.append(SpawnNPC(client, world, args, 65, -3 *1.5))
         batch.append(SpawnNPC(client, world, args, 110, -1 * 1.5))
 
-        # for response in carla.Client.apply_batch_sync(client, batch):
-        #     if response.error:
-        #         logging.error(response.error)
-        #     else:
-        #         vehicles_list.append(response.actor_id)
+        for response in carla.Client.apply_batch_sync(client, batch):
+            if response.error:
+                logging.error(response.error)
+            else:
+                vehicles_list.append(response.actor_id)
 
         start_time = world.hud.simulation_time
 
