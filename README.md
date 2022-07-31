@@ -137,3 +137,5 @@ Below you can see twiddle running a few times for throttle PID weights.
 
 In an attempt to solve the convergance issue, I changed twiddle so that it runs 5 times in a row for each PID weight.
 
+I realized late that it didnt converge because my change values were WAY to high and each iteration, the PID values were changing by way too much. Chaning the D values to 0.1 helped a lot. 
+
