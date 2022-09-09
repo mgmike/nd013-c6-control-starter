@@ -429,38 +429,30 @@ int main ()
       ////////////////////////////////////////
 
       // Update the delta time with the previous command
-      // pid_steer.UpdateDeltaTime(new_delta_time);
+      pid_steer.UpdateDeltaTime(new_delta_time);
 
       // Compute steer error
       double error_steer;
       double steer_output;
 
-      /**
-      * To get the current sterring angle, I computed the slope of the path by using the last and second to last point of the list. 
-      * I then used tangent to calculate the angle in relation to the x axis.
-      * PS. I found the angle_between_points function right after I finished coding that... 
-      * so that was kind of a waste lol. At least it works better!
-      **/
-      double dx = 0.0;
-      double dy = 0.0;
       double yaw_exp = 0.0;
 
-      // yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
+      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      // error_steer = yaw_exp - yaw;
+      error_steer = yaw_exp - yaw;
 
       // // Compute control to apply
-      // pid_steer.UpdateError(error_steer);
-      // steer_output = - pid_steer.TotalError();
+      pid_steer.UpdateError(error_steer);
+      steer_output = - pid_steer.TotalError();
 
       // Save data
-      // file_steer.seekg(std::ios::beg);
-      // for(int j=0; j < i - 1; ++j) {
-      //     file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      // }
-      // file_steer  << i ;
-      // file_steer  << " " << error_steer;
-      // file_steer  << " " << steer_output << endl;
+      file_steer.seekg(std::ios::beg);
+      for(int j=0; j < i - 1; ++j) {
+          file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+      file_steer  << i ;
+      file_steer  << " " << error_steer;
+      file_steer  << " " << steer_output << endl;
 
       ////////////////////////////////////////
       // Throttle control
@@ -472,8 +464,8 @@ int main ()
       // Compute error of speed
       double error_throttle;
 
-      // error_throttle = velocity - v_points[v_points.size() - 1];
-      error_throttle = velocity - 5.0;
+      error_throttle = velocity - v_points[v_points.size() - 1];
+      // error_throttle = velocity - 5.0;
 
       double throttle_output;
       double brake_output;
@@ -525,10 +517,10 @@ int main ()
 
 
       if (data["restart"]){
-        // cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
-        // twiddle(pid_steer);
-        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
-        twiddle(pid_throttle);
+        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        twiddle(pid_steer);
+        // cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
+        // twiddle(pid_throttle);
 
 
         fstream file_pid;
