@@ -96,12 +96,17 @@ MotionPlanner motion_planner(P_NUM_PATHS, P_GOAL_OFFSET, P_ERR_TOLERANCE);
 bool have_obst = false;
 vector<State> obstacles;
 
-void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
+void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, State ego, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
 
   State ego_state;
-
-  ego_state.location.x = x_points[x_points.size()-1];
-  ego_state.location.y = y_points[y_points.size()-1];
+  int thresh = 3;
+  if (abs(x_points[x_points.size()-1] - ego.location.x) < thresh && abs(y_points[y_points.size()-1] - ego.location.y) < thresh){
+    ego_state.location.x = x_points[x_points.size()-1];
+    ego_state.location.y = y_points[y_points.size()-1];
+  } else {
+    ego_state.location.x = ego.location.x;
+    ego_state.location.y = ego.location.y;
+  }
   ego_state.velocity.x = velocity;
 
   if( x_points.size() > 1 ){
@@ -385,18 +390,22 @@ int main ()
       fstream file_throttle;
       file_throttle.open("throttle_pid_data.txt");
 
+      // Main trajectory. 20 waypoints in my example
       vector<double> x_points = data["traj_x"];
       vector<double> y_points = data["traj_y"];
       vector<double> v_points = data["traj_v"];
       double yaw = data["yaw"];
       double velocity = data["velocity"];
       double sim_time = data["time"];
+
+      // Goal location. Only one point
       double waypoint_x = data["waypoint_x"];
       double waypoint_y = data["waypoint_y"];
       double waypoint_t = data["waypoint_t"];
       bool is_junction = data["waypoint_j"];
       string tl_state = data["tl_state"];
 
+      // Location of vehicle
       double x_position = data["location_x"];
       double y_position = data["location_y"];
       double z_position = data["location_z"];
@@ -412,12 +421,18 @@ int main ()
       goal.location.y = waypoint_y;
       goal.rotation.yaw = waypoint_t;
 
+      State ego;
+      ego.location.x = x_position;
+      ego.location.y = y_position;
+      ego.rotation.yaw = yaw;
+
+      // Spirals generated. Only 7 in my example
       vector< vector<double> > spirals_x;
       vector< vector<double> > spirals_y;
       vector< vector<double> > spirals_v;
       vector<int> best_spirals;
 
-      path_planner(x_points, y_points, v_points, yaw, velocity, goal, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
+      path_planner(x_points, y_points, v_points, yaw, velocity, goal, ego, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
 
       // Save time and compute delta time
       time(&timer);
