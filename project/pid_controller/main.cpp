@@ -96,12 +96,17 @@ MotionPlanner motion_planner(P_NUM_PATHS, P_GOAL_OFFSET, P_ERR_TOLERANCE);
 bool have_obst = false;
 vector<State> obstacles;
 
-void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
+void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, State ego, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
 
   State ego_state;
-
-  ego_state.location.x = x_points[x_points.size()-1];
-  ego_state.location.y = y_points[y_points.size()-1];
+  int thresh = 3;
+  if (abs(x_points[x_points.size()-1] - ego.location.x) < thresh && abs(y_points[y_points.size()-1] - ego.location.y) < thresh){
+    ego_state.location.x = x_points[x_points.size()-1];
+    ego_state.location.y = y_points[y_points.size()-1];
+  } else {
+    ego_state.location.x = ego.location.x;
+    ego_state.location.y = ego.location.y;
+  }
   ego_state.velocity.x = velocity;
 
   if( x_points.size() > 1 ){
@@ -385,18 +390,22 @@ int main ()
       fstream file_throttle;
       file_throttle.open("throttle_pid_data.txt");
 
+      // Main trajectory. 20 waypoints in my example
       vector<double> x_points = data["traj_x"];
       vector<double> y_points = data["traj_y"];
       vector<double> v_points = data["traj_v"];
       double yaw = data["yaw"];
       double velocity = data["velocity"];
       double sim_time = data["time"];
+
+      // Goal location. Only one point
       double waypoint_x = data["waypoint_x"];
       double waypoint_y = data["waypoint_y"];
       double waypoint_t = data["waypoint_t"];
       bool is_junction = data["waypoint_j"];
       string tl_state = data["tl_state"];
 
+      // Location of vehicle
       double x_position = data["location_x"];
       double y_position = data["location_y"];
       double z_position = data["location_z"];
@@ -412,12 +421,18 @@ int main ()
       goal.location.y = waypoint_y;
       goal.rotation.yaw = waypoint_t;
 
+      State ego;
+      ego.location.x = x_position;
+      ego.location.y = y_position;
+      ego.rotation.yaw = yaw;
+
+      // Spirals generated. Only 7 in my example
       vector< vector<double> > spirals_x;
       vector< vector<double> > spirals_y;
       vector< vector<double> > spirals_v;
       vector<int> best_spirals;
 
-      path_planner(x_points, y_points, v_points, yaw, velocity, goal, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
+      path_planner(x_points, y_points, v_points, yaw, velocity, goal, ego, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
 
       // Save time and compute delta time
       time(&timer);
@@ -429,38 +444,30 @@ int main ()
       ////////////////////////////////////////
 
       // Update the delta time with the previous command
-      // pid_steer.UpdateDeltaTime(new_delta_time);
+      pid_steer.UpdateDeltaTime(new_delta_time);
 
       // Compute steer error
       double error_steer;
       double steer_output;
 
-      /**
-      * To get the current sterring angle, I computed the slope of the path by using the last and second to last point of the list. 
-      * I then used tangent to calculate the angle in relation to the x axis.
-      * PS. I found the angle_between_points function right after I finished coding that... 
-      * so that was kind of a waste lol. At least it works better!
-      **/
-      double dx = 0.0;
-      double dy = 0.0;
       double yaw_exp = 0.0;
 
-      // yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
+      yaw_exp = angle_between_points(x_position, y_position, x_points[0], y_points[0]);
 
-      // error_steer = yaw_exp - yaw;
+      error_steer = yaw_exp - yaw;
 
       // // Compute control to apply
-      // pid_steer.UpdateError(error_steer);
-      // steer_output = - pid_steer.TotalError();
+      pid_steer.UpdateError(error_steer);
+      steer_output = - pid_steer.TotalError();
 
       // Save data
-      // file_steer.seekg(std::ios::beg);
-      // for(int j=0; j < i - 1; ++j) {
-      //     file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      // }
-      // file_steer  << i ;
-      // file_steer  << " " << error_steer;
-      // file_steer  << " " << steer_output << endl;
+      file_steer.seekg(std::ios::beg);
+      for(int j=0; j < i - 1; ++j) {
+          file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+      file_steer  << i ;
+      file_steer  << " " << error_steer;
+      file_steer  << " " << steer_output << endl;
 
       ////////////////////////////////////////
       // Throttle control
@@ -472,8 +479,8 @@ int main ()
       // Compute error of speed
       double error_throttle;
 
-      // error_throttle = velocity - v_points[v_points.size() - 1];
-      error_throttle = velocity - 5.0;
+      error_throttle = velocity - v_points[v_points.size() - 1];
+      // error_throttle = velocity - 5.0;
 
       double throttle_output;
       double brake_output;
@@ -525,10 +532,10 @@ int main ()
 
 
       if (data["restart"]){
-        // cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " D: " << pid_steer.K[1] << " I: " << pid_steer.K[2] << endl;
-        // twiddle(pid_steer);
-        cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
-        twiddle(pid_throttle);
+        cout << "Steer Error: " << pid_steer.total_err << " P: " << pid_steer.K[0] << " I: " << pid_steer.K[1] << " D: " << pid_steer.K[2] << endl;
+        twiddle(pid_steer);
+        // cout << "Throttle Error: " << pid_throttle.total_err << " P: " << pid_throttle.K[0] << " I: " << pid_throttle.K[1] << " D: " << pid_throttle.K[2] << endl;
+        // twiddle(pid_throttle);
 
 
         fstream file_pid;
