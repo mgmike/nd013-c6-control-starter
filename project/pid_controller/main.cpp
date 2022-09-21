@@ -96,12 +96,18 @@ MotionPlanner motion_planner(P_NUM_PATHS, P_GOAL_OFFSET, P_ERR_TOLERANCE);
 bool have_obst = false;
 vector<State> obstacles;
 
-void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
+void path_planner(vector<double>& x_points, vector<double>& y_points, vector<double>& v_points, double yaw, double velocity, State goal, State ego, bool is_junction, string tl_state, vector< vector<double> >& spirals_x, vector< vector<double> >& spirals_y, vector< vector<double> >& spirals_v, vector<int>& best_spirals){
 
   State ego_state;
 
-  ego_state.location.x = x_points[x_points.size()-1];
-  ego_state.location.y = y_points[y_points.size()-1];
+  int thresh = 3;
+  if (abs(x_points[x_points.size()-1] - ego.location.x) < thresh && abs(y_points[y_points.size()-1] - ego.location.y) < thresh){
+    ego_state.location.x = x_points[x_points.size()-1];
+    ego_state.location.y = y_points[y_points.size()-1];
+  } else {
+    ego_state.location.x = ego.location.x;
+    ego_state.location.y = ego.location.y;
+  }
   ego_state.velocity.x = velocity;
 
   if( x_points.size() > 1 ){
@@ -353,17 +359,18 @@ int main ()
   pid_steer.Init({0.3, 0.001, 0.3}, {1.0, 1.0, 1.0}, 1.2, -1.2);
   pid_throttle.Init({0.2, 0.001, 0.1}, {1.0, 1.0, 1.0}, 1.0, -1.0);
 
-
-  // double steer_weights[] = {0.2, 0.01, 0.05};
-  // double throttle_weights[] = {1.5, 0.8, 0.001};
-
-
+  // Student pid
   // double steer_weights[] = {0.3, 0.001, 0.3};
   // double throttle_weights[] = {0.2, 0.001, 0.1};
 
+  // My twiddle implementation
+  // double steer_weights[] = {0.59,0.58019,0.383625};
+  // double throttle_weights[] = {0.490477,0.294057,0.00351478};
+  
+
 // Throttle Error: 4.62479 P: 0.0506081 D: 0.0561622 I: 0.0122569
 
-  updatePidFromFile(pid_steer, pid_throttle);
+  // updatePidFromFile(pid_steer, pid_throttle);
 
   h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode){
     auto s = hasData(data);
@@ -405,12 +412,17 @@ int main ()
       goal.location.y = waypoint_y;
       goal.rotation.yaw = waypoint_t;
 
+      State ego;
+      ego.location.x = x_position;
+      ego.location.y = y_position;
+      ego.rotation.yaw = yaw;
+
       vector< vector<double> > spirals_x;
       vector< vector<double> > spirals_y;
       vector< vector<double> > spirals_v;
       vector<int> best_spirals;
 
-      path_planner(x_points, y_points, v_points, yaw, velocity, goal, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
+      path_planner(x_points, y_points, v_points, yaw, velocity, goal, ego, is_junction, tl_state, spirals_x, spirals_y, spirals_v, best_spirals);
 
       // Save time and compute delta time
       time(&timer);
@@ -466,7 +478,7 @@ int main ()
       double error_throttle;
 
       error_throttle = velocity - v_points[v_points.size() - 1];
-      // error_throttle = velocity - 10.0;
+      // error_throttle = velocity - 5.0;
 
       double throttle_output;
       double brake_output;
